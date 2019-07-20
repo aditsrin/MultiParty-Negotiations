@@ -7,28 +7,30 @@ def Negotiation(deadline,parties):
     iterator = 0
     for rounds in range(deadline):
         time.sleep(1)
-        if(iterator==number_of_parties):
-            iterator = 0
-        else:
-            bidding_party = parties[iterator]
-            iterator +=1
-        print("Current Bid by Party #",bidding_party.name)
-        current_bid,bid_issue = bidding_party.offerbid(rounds)
-        print("here",current_bid,bid_issue)
-        votesevaluater = False
-        for party in parties:
-            if party!=bidding_party:
-                partyresponse = party.evaluate_bid_and_vote(current_bid,bid_issue,rounds)
-                if(partyresponse=="No"):
-                    votesevaluater = False
-                    break
-                else:
-                    votesevaluater = True
-        if(votesevaluater==True):
-            print("Negotiation Successfull Offered by Party #",bidding_party.name)
-            return
-        else:
-            continue
+        # if(iterator==number_of_parties):
+        #     iterator = 0
+        #     bidding_party = parties[iterator]
+        # else:
+        #     bidding_party = parties[iterator]
+        #     iterator +=1
+        for bidding_party in parties:
+            print("Current Bid by Party #",bidding_party.name)
+            current_bid,bid_issue = bidding_party.offerbid(rounds)
+            print("The current bid utility being offered is: ",current_bid," and the current issue is ",bid_issue)
+            votesevaluater = False
+            for party in parties:
+                if party!=bidding_party:
+                    partyresponse = party.evaluate_bid_and_vote(current_bid,bid_issue,rounds)
+                    if(partyresponse=="No"):
+                        votesevaluater = False
+                        break
+                    else:
+                        votesevaluater = True
+            if(votesevaluater==True):
+                print("Negotiation Successfull Offered by Party #",bidding_party.name)
+                return
+            else:
+                continue
     print("Sorry Deadline is over and negotiation could not be completed")
 
 

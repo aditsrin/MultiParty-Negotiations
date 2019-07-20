@@ -12,7 +12,8 @@ class Party:
         for i in issues:
             self.utilityspace[i] = random.uniform(0, 1)
         self.utilitylist = self.boulwareUtilities(self.rv,self.deadline)
-        print(self.utilityspace)
+       # print (self.utilitylist)
+       # print(self.utilityspace)
 
     def offerbid(self,round_number):
         boulware = self.utilitylist[round_number]
@@ -37,10 +38,13 @@ class Party:
                 utility_return = self.utilityspace[issue_vals]
                 index = issue_vals
         opponent_offered = self.utilityspace[bid_issue]
-        print("check here",opponent_offered,bid_issue,utility_return)
+        print("The bid offered by the current bidding party is ",offered_value," and the bid issue is",bid_issue," and my utility for this issue is ",opponent_offered)
+        print("The current utility of the party is",utility_return)
         if(opponent_offered > utility_return):
+            print("Oh higher bid offered..accepting..")
             return "Yes"
         else:
+            print("Oh lower bid offered..rejecting..")
             return "No"
 
     def boulwareUtilities (self,rv,Deadline):
@@ -57,4 +61,5 @@ class Party:
             # print beta
             # print "================"
             ut.append(float("{0:.4f}".format(curr_ut)))
+        ut.reverse()
         return ut
