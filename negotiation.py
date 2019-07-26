@@ -27,7 +27,8 @@ def Negotiation(deadline,parties):
                     else:
                         votesevaluater = True
             if(votesevaluater==True):
-                print("Negotiation Successfull Offered by Party #",bidding_party.name)
+                #print("here")
+                print("Negotiation Successfull Offered by Party #",bidding_party.name," in round number",rounds)
                 return
             else:
                 continue
