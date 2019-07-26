@@ -2,17 +2,18 @@ import random,time,sys,math,os,datetime
 from parties import Party
 from domain import Domain
 
-def Negotiation(deadline,parties):
+def Negotiation(deadline,parties,updaterate):
     number_of_parties = len(parties)
     iterator = 0
     for rounds in range(deadline):
         time.sleep(1)
-        # if(iterator==number_of_parties):
-        #     iterator = 0
-        #     bidding_party = parties[iterator]
-        # else:
-        #     bidding_party = parties[iterator]
-        #     iterator +=1
+        updateflag = False
+
+        if(rounds%updaterate==0 and rounds >=1):
+            updateflag = True
+            for party in parties:
+                party.checkupdate(updateflag,rounds,updaterate)
+
         for bidding_party in parties:
             print("Current Bid by Party #",bidding_party.name)
             current_bid,bid_issue = bidding_party.offerbid(rounds)
@@ -54,6 +55,7 @@ def main():
     parties = []
     current_domain = Domain(initial_domain)
     deadline = 100
+    updaterate = 4
     for partynames in range(1,number_of_parties+1):
         tempparty = Party(str(partynames),deadline)
         tempparty.setutilityspace(issues_list)
@@ -61,6 +63,6 @@ def main():
     #deadline = int(input("Enter the deadline : "))
     time.sleep(3)
     print("Starting Negotiation Protocol")
-    Negotiation(deadline,parties)
+    Negotiation(deadline,parties,updaterate)
 if __name__ == '__main__':
     main()

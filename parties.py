@@ -8,6 +8,40 @@ class Party:
         self.response = ["Yes","No"]
         self.rv = 0.0
         self.deadline = deadline
+        self.rvlist = [0.12,0.321,0.57,0.75]
+        self.flag = 1
+    def checkupdate(self,updateflag,rounds,updaterate):
+        if(updateflag==False):
+            return
+        else:
+            #print(updateflag,updaterate,rounds)
+            if(updaterate==rounds):
+                self.rv = random.choice(self.rvlist)
+            else:
+                if(self.flag==1):
+                    prob = random.randint(1,4)
+                    if(prob < 4):
+                        cur_pos = self.rvlist.index(self.rv)
+                        if(cur_pos < 3):
+                            self.rv = self.rvlist[cur_pos+1]
+                    else:
+                        cur_pos = self.rvlist.index(self.rv)
+                        self.rv = random.choice(self.rvlist[:cur_pos])
+                        self.flag = -1
+                elif(self.flag == -1):
+                    prob = random.randint(1,4)
+                    if(prob < 4):
+                        cur_pos = self.rvlist.index(self.rv)
+                        if(cur_pos > 0):
+                            self.rv = random.choice(self.rvlist[:cur_pos])
+                    else:
+                        cur_pos = self.rvlist.index(self.rv)
+                        if(cur_pos < 3):
+                            self.rv = self.rvlist[cur_pos+1]
+                        self.flag = 1
+        self.utilitylist = self.boulwareUtilities(self.rv,self.deadline)
+
+
     def setutilityspace(self,issues):
         for i in issues:
             self.utilityspace[i] = random.uniform(0, 1)
@@ -28,6 +62,7 @@ class Party:
         return utility_return,index
     
     def evaluate_bid_and_vote(self,offered_value,bid_issue,round_number):
+        #print(self.utilitylist)
         boulware = self.utilitylist[round_number]
         closest_value = 2
         utility_return = boulware
