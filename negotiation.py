@@ -1,27 +1,35 @@
 import random,time,sys,math,os,datetime
 from parties import Party
 from domain import Domain
-
+import numpy as np
 def Negotiation(deadline,parties,updaterate):
     number_of_parties = len(parties)
     iterator = 0
+    myparty = parties[1]  ###my agent bayesian
+    myparty.strategy = "bayesian"
     for rounds in range(deadline):
+        print("*********************************************************************************************")
+        print('Round ',rounds)
+        print("*********************************************************************************************")
         time.sleep(1)
         updateflag = False
-
-        if(rounds%updaterate==0 and rounds >=1):
+        if((rounds%updaterate==0 and rounds >=1) or rounds==1):
             updateflag = True
             for party in parties:
                 party.checkupdate(updateflag,rounds,updaterate)
-
+        for party in parties:
+            party.roundrvlist.append(party.rv)
+        print("yoboi",myparty.roundrvlist)
+        myparty.mypedictedrvs(rounds)
+        print("idhr",myparty.predictedrvs)
         for bidding_party in parties:
             print("Current Bid by Party #",bidding_party.name)
-            current_bid,bid_issue = bidding_party.offerbid(rounds)
+            current_bid,bid_issue = bidding_party.offerbid(rounds,bidding_party.strategy)
             print("The current bid utility being offered is: ",current_bid," and the current issue is ",bid_issue)
             votesevaluater = False
             for party in parties:
                 if party!=bidding_party:
-                    partyresponse = party.evaluate_bid_and_vote(current_bid,bid_issue,rounds)
+                    partyresponse = party.evaluate_bid_and_vote(current_bid,bid_issue,rounds,party.strategy)
                     if(partyresponse=="No"):
                         votesevaluater = False
                         break
@@ -59,9 +67,14 @@ def main():
     for partynames in range(1,number_of_parties+1):
         tempparty = Party(str(partynames),deadline)
         tempparty.setutilityspace(issues_list)
+        tempparty.utilitylistrv()                         ###### GenerateUtility list from rvlist
+        tempparty.beiliefplot()                           ###### Belief Plot initialisation and roundprob init
+        # print("check",tempparty.myutilitiesrv[3])
+        # print("adsa",tempparty.Probabilitylist)
+        # print("asfasf",tempparty.roundproblist)
         parties.append(tempparty)
     #deadline = int(input("Enter the deadline : "))
-    time.sleep(3)
+    #time.sleep(3)
     print("Starting Negotiation Protocol")
     Negotiation(deadline,parties,updaterate)
 if __name__ == '__main__':
