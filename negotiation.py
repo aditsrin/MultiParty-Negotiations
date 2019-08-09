@@ -7,11 +7,13 @@ def Negotiation(deadline,parties,updaterate):
     iterator = 0
     myparty = parties[1]  ###my agent bayesian
     myparty.strategy = "bayesian"
+    mycounterparty = parties[2]
+    mycounterparty.strategy = "counter"
     for rounds in range(deadline):
         print("*********************************************************************************************")
         print('Round ',rounds)
         print("*********************************************************************************************")
-        time.sleep(1)
+        #time.sleep(1)
         updateflag = False
         if((rounds%updaterate==0 and rounds >=1) or rounds==1):
             updateflag = True
@@ -19,9 +21,10 @@ def Negotiation(deadline,parties,updaterate):
                 party.checkupdate(updateflag,rounds,updaterate)
         for party in parties:
             party.roundrvlist.append(party.rv)
-        print("yoboi",myparty.roundrvlist)
+        #print("yoboi",myparty.roundrvlist)
         myparty.mypedictedrvs(rounds)
-        print("idhr",myparty.predictedrvs)
+        mycounterparty.counterinitialize(rounds)
+        #print("idhr",myparty.predictedrvs)
         for bidding_party in parties:
             print("Current Bid by Party #",bidding_party.name)
             current_bid,bid_issue = bidding_party.offerbid(rounds,bidding_party.strategy)
@@ -38,10 +41,11 @@ def Negotiation(deadline,parties,updaterate):
             if(votesevaluater==True):
                 #print("here")
                 print("Negotiation Successfull Offered by Party #",bidding_party.name," in round number",rounds)
-                return
+                return current_bid
             else:
                 continue
     print("Sorry Deadline is over and negotiation could not be completed")
+    return  0.0
 
 
 def main():
@@ -76,6 +80,10 @@ def main():
     #deadline = int(input("Enter the deadline : "))
     #time.sleep(3)
     print("Starting Negotiation Protocol")
-    Negotiation(deadline,parties,updaterate)
+    tests = 100
+    accepts = []
+    for i in range(tests):
+        accepts.append(Negotiation(deadline,parties,updaterate))
+    print("Mean",np.mean(accepts))
 if __name__ == '__main__':
     main()

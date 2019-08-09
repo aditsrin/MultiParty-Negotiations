@@ -16,7 +16,10 @@ class Party:
         self.gamma=[0]*len(self.rvlist)
         self.new_gamma=[0]*len(self.rvlist)
         self.bayesianutilitylist = []
+        self.counterutilitylist = []
         self.strategy = "boulware"
+        self.countlist = [0]*len(self.rvlist)
+
     def checkupdate(self,updateflag,rounds,updaterate):
         if(updateflag==False):
             return
@@ -65,6 +68,8 @@ class Party:
             mystrategybid = self.bayesianutilitylist[round_number]
         elif(strategy=="boulware"):
             mystrategybid = self.utilitylist[round_number]
+        elif(strategy=="counter"):
+            mystrategybid = self.counterutilitylist[round_number]
         closest_value = 2
         utility_return = mystrategybid
         for issue_vals in self.utilityspace:
@@ -81,6 +86,8 @@ class Party:
             mystrategybid = self.bayesianutilitylist[round_number]
         elif(strategy=="boulware"):
             mystrategybid = self.utilitylist[round_number]
+        elif(strategy=="counter"):
+            mystrategybid = self.counterutilitylist[round_number]
         closest_value = 2
         utility_return = mystrategybid
         for issue_vals in self.utilityspace:
@@ -138,10 +145,10 @@ class Party:
             # print("asfafafafew",self.gamma,"new gamma here",self.new_gamma)
             self.updateprobs(self.roundproblist)
             # print("let us see",self.roundproblist,self.Probabilitylist)
-        print("--------------------------------------------------------------------")
+        #print("--------------------------------------------------------------------")
         self.generatebayesianutility(roundnum)
-        print("final check",self.bayesianutilitylist)
-        print("--------------------------------------------------------------------")
+        #print("final check",self.bayesianutilitylist)
+        #print("--------------------------------------------------------------------")
 
     def tempgenerate(self,i,Deadline,roundnum,RV):
         temp=[0]
@@ -196,7 +203,7 @@ class Party:
 
 
     def updateprobs(self,new_probability):
-        print(self.Probabilitylist)
+        #print(self.Probabilitylist)
         new_total=0
         for i in range(0,len(new_probability)):
             new_probability[i]=new_probability[i]*self.new_gamma[i]
@@ -217,3 +224,25 @@ class Party:
         for i in range(0,len(self.roundproblist)):
             bayesian_utility += self.roundproblist[i]*self.myutilitiesrv[i][roundnum]
         self.bayesianutilitylist.append(bayesian_utility)
+    def updatecounts(self):
+        cur_rv = self.rv
+        cur_pos =self.rvlist.index(self.rv)
+        self.countlist[cur_pos]+=1
+    def updateprobscounter(self):
+        for i in range(0,len(self.rvlist)):
+            self.roundproblist[i] = self.countlist[i]/np.sum(self.countlist)
+    def counterinitialize(self,rounds):
+        if(rounds >1):
+            self.updatecounts()
+            #print("checking counter",self.countlist)
+            self.updateprobscounter()
+            #print("checking counter problist",self.roundproblist)
+        self.generatecounterutility(rounds)
+        #print("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
+        #print(self.counterutilitylist)
+        #print("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
+    def generatecounterutility(self,roundnum):
+        counter_utility = 0
+        for i in range(0,len(self.roundproblist)):
+            counter_utility += self.roundproblist[i]*self.myutilitiesrv[i][roundnum]
+        self.counterutilitylist.append(counter_utility)
