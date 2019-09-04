@@ -1,5 +1,5 @@
 import random
-import math
+import math,datetime
 import numpy as np
 class Party:
     '''This is Party Class'''
@@ -11,12 +11,12 @@ class Party:
         self.deadline = deadline
         self.rvlist = [0.12,0.321,0.57,0.75]
         self.flag = 1
-        self.roundrvlist = []
-        self.means_offers=[]
-        self.gamma=[0]*len(self.rvlist)
-        self.new_gamma=[0]*len(self.rvlist)
+        self.roundrvlist =  []
+        self.means_offers = []
+        self.gamma = [0]*len(self.rvlist)
+        self.new_gamma = [0]*len(self.rvlist)
         self.bayesianutilitylist = []
-        self.counterutilitylist = []
+        self.counterutilitylist  = []
         self.strategy = "boulware"
         self.countlist = [0]*len(self.rvlist)
 
@@ -97,14 +97,14 @@ class Party:
                 utility_return = self.utilityspace[issue_vals]
                 index = issue_vals
         opponent_offered = self.utilityspace[bid_issue]
-        print("The bid offered by the current bidding party is ",offered_value," and the bid issue is",bid_issue," and my utility for this issue is ",opponent_offered)
-        print("The current utility of the party is",utility_return)
+        #print("The bid offered by the current bidding party is ",offered_value," and the bid issue is",bid_issue," and my utility for this issue is ",opponent_offered)
+        #print("The current utility of the party is",utility_return)
         if(opponent_offered > utility_return):
-            print("Oh higher bid offered..accepting..")
-            return "Yes"
+            #print("Oh higher bid offered..accepting..")
+            return "Yes",opponent_offered
         else:
-            print("Oh lower bid offered..rejecting..")
-            return "No"
+            #print("Oh lower bid offered..rejecting..")
+            return "No",opponent_offered
 
     def boulwareUtilities (self,rv,Deadline):
         ut = []
