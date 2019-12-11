@@ -19,7 +19,8 @@ class Party:
         self.counterutilitylist  = []
         self.strategy = "boulware"
         self.countlist = [0]*len(self.rvlist)
-
+        self.lstmlist = [0]*len(self.rvlist)
+        self.lstmutilitylist = []
     def checkupdate(self,updateflag,rounds,updaterate):
         if(updateflag==False):
             return
@@ -70,6 +71,8 @@ class Party:
             mystrategybid = self.utilitylist[round_number]
         elif(strategy=="counter"):
             mystrategybid = self.counterutilitylist[round_number]
+        elif(strategy=="lstm"):
+            mystrategybid = self.lstmutilitylist[round_number]
         closest_value = 2
         utility_return = mystrategybid
         for issue_vals in self.utilityspace:
@@ -88,6 +91,8 @@ class Party:
             mystrategybid = self.utilitylist[round_number]
         elif(strategy=="counter"):
             mystrategybid = self.counterutilitylist[round_number]
+        elif(strategy=="lstm"):
+            mystrategybid = self.lstmutilitylist[round_number]
         closest_value = 2
         utility_return = mystrategybid
         for issue_vals in self.utilityspace:
@@ -246,3 +251,36 @@ class Party:
         for i in range(0,len(self.roundproblist)):
             counter_utility += self.roundproblist[i]*self.myutilitiesrv[i][roundnum]
         self.counterutilitylist.append(counter_utility)
+    
+    def findclosest(self,cur_rv):
+        temp = []
+        for i in range(len(self.rvlist)):
+            temp.append(abs(cur_rv-self.rvlist[i]))
+        ans = temp.index(min(temp))
+        ans = self.rvlist[ans]
+        return ans
+    def lstmcountsupdate(self,rounds,test_count):
+        cur_rv = self.lstmrv[test_count][rounds-1]
+        cur_rv = self.findclosest(cur_rv)
+        cur_pos = self.rvlist.index(cur_rv)
+        self.lstmlist[cur_pos]+=1
+
+    def updatelstmpreds(self):
+        for i in range(len(self.rvlist)):
+            self.roundproblist[i] = self.lstmlist[i]/np.sum(self.lstmlist)
+    
+    def generate_lstmrules(self,roundnum):
+        lstm_utlity = 0
+        for i in range(len(self.roundproblist)):
+            lstm_utlity += self.roundproblist[i]*self.myutilitiesrv[i][roundnum]
+        self.lstmutilitylist.append(lstm_utlity)
+
+    def lstminitialize(self,updaterate,rounds,test_count):
+        # print("Lstm here")
+        self.lstmrv = np.load('pred_fire'+str(updaterate)+'.npy')
+        if(rounds>1):
+            self.lstmcountsupdate(rounds,test_count)
+            self.updatelstmpreds()
+        self.generate_lstmrules(rounds)
+
+

@@ -26,5 +26,8 @@ def utilitygen(filename):
             for k in allist[2]:
                 ans[t] = i+j+k
                 t+=1
+    # print(ans)
     return ans
-
+# utilitygen('KillerRobot_util1.xml')
+# utilitygen('KillerRobot_util2.xml')
+# utilitygen('KillerRobot_util3.xml')
