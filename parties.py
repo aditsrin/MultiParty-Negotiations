@@ -9,7 +9,9 @@ class Party:
         self.response = ["Yes","No"]
         self.rv = 0.0
         self.deadline = deadline
-        self.rvlist = [0.12,0.321,0.57,0.75]
+        # self.rvlist = [0.12,0.321,0.57,0.75]
+        self.rvlist = [i for i in range(5,50,5)]   ## utility of rvs
+        # self.rvlist = [0.12,0.75]
         self.flag = 1
         self.roundrvlist =  []
         self.means_offers = []
@@ -21,17 +23,19 @@ class Party:
         self.countlist = [0]*len(self.rvlist)
         self.lstmlist = [0]*len(self.rvlist)
         self.lstmutilitylist = []
+        self.optimallist = []
     def checkupdate(self,updateflag,rounds,updaterate):
         if(updateflag==False):
-            return
+            pass
         else:
-            #print(updateflag,updaterate,rounds)
+            # print(updateflag,updaterate,rounds)
+            # print("here")
             if(rounds==1):
                 self.rv = random.choice(self.rvlist)
             else:
                 if(self.flag==1):
-                    prob = random.randint(1,4)
-                    if(prob < 4):
+                    prob = random.randint(1,5)
+                    if(prob < 3):
                         cur_pos = self.rvlist.index(self.rv)
                         if(cur_pos < len(self.rvlist)-1 ):
                             if(len(self.rvlist[cur_pos+1:]) > 0):
@@ -42,8 +46,8 @@ class Party:
                             self.rv = random.choice(self.rvlist[:cur_pos])
                         self.flag = -1
                 elif(self.flag == -1):
-                    prob = random.randint(1,4)
-                    if(prob < 4):
+                    prob = random.randint(1,5)
+                    if(prob < 3):
                         cur_pos = self.rvlist.index(self.rv)
                         if(cur_pos > 0):
                             if(len(self.rvlist[:cur_pos])>0):
@@ -54,7 +58,10 @@ class Party:
                             if(len(self.rvlist[cur_pos+1:]) > 0):
                                 self.rv = random.choice(self.rvlist[cur_pos+1:])
                         self.flag = 1
-        self.utilitylist = self.boulwareUtilities(self.rv,self.deadline)
+            self.utilitylist = self.boulwareUtilities(self.rvutils[self.rvlist.index(self.rv)],self.deadline)      #boulware
+            # self.utilitylist = self.optimalbidder(self.rv,self.deadline)        #optimalbidder
+
+        return self.rv
 
 
     def setutilityspace(self,issues):
@@ -75,9 +82,10 @@ class Party:
             mystrategybid = self.lstmutilitylist[round_number]
         closest_value = 2
         utility_return = mystrategybid
+        # print("offering",mystrategybid,self.name,self.strategy)
         for issue_vals in self.utilityspace:
             temp = min(closest_value,abs(self.utilityspace[issue_vals]-mystrategybid))
-            if(temp!=closest_value):
+            if(temp<closest_value):
                 closest_value = temp
                 utility_return = self.utilityspace[issue_vals]
                 index = issue_vals
@@ -94,26 +102,28 @@ class Party:
         elif(strategy=="lstm"):
             mystrategybid = self.lstmutilitylist[round_number]
         closest_value = 2
-        utility_return = mystrategybid
+        utility_return = mystrategybid        
+        # print("evaluating",mystrategybid,self.name,self.strategy)
         for issue_vals in self.utilityspace:
             temp = min(closest_value,abs(self.utilityspace[issue_vals]-mystrategybid))
-            if(temp!=closest_value):
+            if(temp<closest_value):
                 closest_value = temp
                 utility_return = self.utilityspace[issue_vals]
                 index = issue_vals
         opponent_offered = self.utilityspace[bid_issue]
-        #print("The bid offered by the current bidding party is ",offered_value," and the bid issue is",bid_issue," and my utility for this issue is ",opponent_offered)
-        #print("The current utility of the party is",utility_return)
+        # print("The bid offered by the current bidding party is ",offered_value," and the bid issue is",bid_issue," and my utility for this issue is ",opponent_offered)
+        # print("The current utility of the party is",utility_return)
         if(opponent_offered > utility_return):
-            #print("Oh higher bid offered..accepting..")
+            # print("Oh higher bid offered..accepting..")
             return "Yes",opponent_offered
         else:
-            #print("Oh lower bid offered..rejecting..")
+                # print("Oh lower bid offered..rejecting..")
             return "No",opponent_offered
 
     def boulwareUtilities (self,rv,Deadline):
+        # print("checkhere",rv)
         ut = []
-        beta = 0.2
+        beta = 0.01
         beta = float(1)/beta
         for i in range(1,Deadline+1):
             minm = min(i,Deadline)
@@ -127,21 +137,30 @@ class Party:
             ut.append(float("{0:.4f}".format(curr_ut)))
         ut.reverse()
         return ut
+
+    def optimalbidder(self,rv,Deadline):
+        ut = []
+        ut.append(.5+.5*rv)
+        for i in range(1,Deadline):
+            ut.append(.5+.5*math.pow(ut[i-1],2))
+        return ut
+    
     def utilitylistrv(self):
         self.myutilitiesrv = []
-        for i in range(0,len(self.rvlist)):
-            self.myutilitiesrv.append(self.boulwareUtilities(self.rvlist[i],self.deadline))
+        # print("check",self.rvutils)
+        for i in range(0,len(self.rvutils)):
+            self.myutilitiesrv.append(self.boulwareUtilities(self.rvutils[i],self.deadline))
 
     def beiliefplot(self):
         self.Probabilitylist = []
         self.roundproblist = []
-        for i in range(0,len(self.rvlist)):
-            self.roundproblist.append(1.0/len(self.rvlist))
+        for i in range(0,len(self.rvutils)):
+            self.roundproblist.append(1.0/len(self.rvutils))
         self.Probabilitylist.append(self.roundproblist)
     
     def mypedictedrvs(self,roundnum):
         self.predictedrvs = []
-        for rvs in self.rvlist:
+        for rvs in self.rvutils:
             self.predictedrvs.append(self.tempgenerate(rvs,self.deadline,roundnum,self.roundrvlist))
         self.Means()
         if(roundnum > 1):
@@ -260,6 +279,7 @@ class Party:
         ans = self.rvlist[ans]
         return ans
     def lstmcountsupdate(self,rounds,test_count):
+        # print(rounds,test_count)
         cur_rv = self.lstmrv[test_count][rounds-1]
         cur_rv = self.findclosest(cur_rv)
         cur_pos = self.rvlist.index(cur_rv)
@@ -277,7 +297,10 @@ class Party:
 
     def lstminitialize(self,updaterate,rounds,test_count):
         # print("Lstm here")
-        self.lstmrv = np.load('pred_fire'+str(updaterate)+'.npy')
+        # self.lstmrv = np.load('LSTM/Data_100_4hyp/Preds/pred_fire'+str(updaterate)+'.npy')
+        self.lstmrv = np.load('LSTM/Meeting_Data_100_9hyp/Preds/pred_meet'+str(updaterate)+'.npy')
+        self.lstmrv = self.lstmrv.reshape(300,99)
+        # print("here",self.lstmrv.shape)
         if(rounds>1):
             self.lstmcountsupdate(rounds,test_count)
             self.updatelstmpreds()

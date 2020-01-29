@@ -5,6 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import axes3d
 from Generator import utilitygen
+from Meeting_prefs import meeting
 import itertools
 testa = []
 testb = []
@@ -16,32 +17,35 @@ def Negotiation(deadline,parties,updaterate,test_count):
     # print(updaterate)
     number_of_parties = len(parties)
     iterator = 0
-    myparty = parties[2]  ###my agent bayesian
+    myparty = parties[2]  
     myparty.strategy = "lstm"
     mycounterparty = parties[1]
     mycounterparty.strategy = "counter"
+    mybayesian = parties[0]
+    mybayesian.strategy = "bayesian" ###my agent bayesian
     for rounds in range(deadline):
-        #print("*********************************************************************************************")
-        #print('Round ',rounds)
-        #print("*********************************************************************************************")
+        # print('Round ',rounds)
         #time.sleep(1)
         updateflag = False
         if((rounds%updaterate==0 and rounds >=1) or rounds==1):
             updateflag = True
-            for party in parties:
-                party.checkupdate(updateflag,rounds,updaterate)
         for party in parties:
-            party.roundrvlist.append(party.rv)
-        #print("yoboi",myparty.roundrvlist)
-        # myparty.mypedictedrvs(rounds)                      ##Bayesian commented
+            party.checkupdate(updateflag,rounds,updaterate)
+        for party in parties:
+            try:
+                party.roundrvlist.append(party.rvutils[party.rvlist.index(party.rv)])
+            except:
+                party.roundrvlist.append(0.0)
+        # print("yoboi",mybayesian.roundrvlist)
+        mybayesian.mypedictedrvs(rounds)                      ##Bayesian commented
         myparty.lstminitialize(updaterate,rounds,test_count)
         mycounterparty.counterinitialize(rounds)
         #print("idhr",myparty.predictedrvs)
         for bidding_party in parties:
-            #print("Current Bid by Party #",bidding_party.name)
+            # print("Current Bid by Party #",bidding_party.name)
             random.seed(datetime.datetime.now())
             current_bid,bid_issue = bidding_party.offerbid(rounds,bidding_party.strategy)
-            #print("The current bid utility being offered is: ",current_bid," and the current issue is ",bid_issue)
+            # print("The current bid utility being offered is: ",current_bid," and the current issue is ",bid_issue)
             votesevaluater = False
             tempcheck = False
             for party in parties:
@@ -90,21 +94,33 @@ def testbench(parties,pref1,pref2,pref3):
     deadline = 100
     prefs = ['pref1','pref2','pref3']
     perms = list(itertools.permutations(prefs))
+    # perms = [prefs]
     # print(len(perms))
     for curlist in perms:
         for j in range(len(curlist)):
             parties[j].utilityspace = eval(curlist[j])
+            # print(parties[j].utilityspace)
+            parties[j].rvlist = [i for i in range(5,50,5)] 
+            parties[j].rvutils = [parties[j].utilityspace[i] for i in parties[j].rvlist]
+            parties[j].rvlist = [i/50 for i in parties[j].rvlist]
+            # print("#####",parties[j].name)
+            parties[j].utilitylistrv()
+            parties[j].beiliefplot()
+            # parties[j].rvlist = [parties[j].utilityspace[i] for i in parties[j].rvlist]
+            # print(parties[j].rvlist)
             print("Party ",j+1,"Profile ==> ",curlist[j],end='   ')
-        print("\n*************************************************************************")
         tests = 100
         accepts = []
         rates = [2,5,10,20,50]
+        # rates = [2]
+        print()
         ratewise_results = []
         for updaterate in rates:
             for i in range(tests):
-                accepts.append(Negotiation(deadline,parties,updaterate,tests))
+                accepts.append(Negotiation(deadline,parties,updaterate,i))
             print("For updaterate == ",updaterate,end=' ')
             print("Mean",np.mean(testa),np.mean(testb),np.mean(testc))
+            # print(testa,testb,testc)
             ratewise_results.append([np.mean(testa),np.mean(testb),np.mean(testc)])
         ratewise_results = np.array(ratewise_results)
         Final_Means = list(np.mean(ratewise_results,axis=0))
@@ -137,28 +153,27 @@ def main():
     deadline = 100
     for partynames in range(1,number_of_parties+1):
         tempparty = Party(str(partynames),deadline)
-        tempparty.setutilityspace(issues_list)
-        tempparty.utilitylistrv()                         ###### GenerateUtility list from rvlist
-        tempparty.beiliefplot()                           ###### Belief Plot initialisation and roundprob init
+        # tempparty.setutilityspace(issues_list)
+        # tempparty.utilitylistrv()                         ###### GenerateUtility list from rvlist
+        # tempparty.beiliefplot()                           ###### Belief Plot initialisation and roundprob init
         # print("check",tempparty.myutilitiesrv[3])
-        # print("adsa",tempparty.Probabilitylist)
-        # print("asfasf",tempparty.roundproblist)
         parties.append(tempparty)
-    # pref1 = utilitygen('car-Profile1.xml')
-    # pref2 = utilitygen('car-Profile2.xml')
-    # pref3 = utilitygen('car-Profile3.xml')
-    pref1 = utilitygen('KillerRobot_util1.xml')
-    pref2 = utilitygen('KillerRobot_util2.xml')
-    pref3 = utilitygen('KillerRobot_util3.xml')
- 
+    # pref1 = utilitygen('KillerRobot_util1.xml')
+    # pref2 = utilitygen('KillerRobot_util2.xml')
+    # pref3 = utilitygen('KillerRobot_util3.xml')
+    prefs = meeting()
+    pref1 = prefs[0]
+    pref2 = prefs[1]
+    pref3 = prefs[2]
     # parties[0].utilityspace = pref1
-    # parties[1].utilityspace = pref3
-    # parties[2].utilityspace = pref2
-    # deadline = int(input("Enter the deadline : "))
-    #time.sleep(3)
+    # parties[1].utilityspace = pref2
+    # parties[2].utilityspace = pref3
     print("Starting Negotiation Protocol")
-    print("RObot Domain")
+    print("Meeting Domain")
     testbench(parties,pref1,pref2,pref3)
+
+
+    # Negotiation(deadline,parties,2,0)
     # print(testa),
     # print(testb)
     # print(testc)
