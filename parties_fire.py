@@ -10,8 +10,8 @@ class Party:
         self.rv = 0.0
         self.deadline = deadline
         # self.rvlist = [0.12,0.321,0.57,0.75]
-        self.rvlist = [i for i in range(5,50,5)]   ## utility of rvs
-        # self.rvlist = [0.12,0.75]
+        # self.rvlist = [i for i in range(5,50,5)]   ## utility of rvs
+        self.rvlist = [0.12,0.75]
         self.flag = 1
         self.roundrvlist =  []
         self.means_offers = []
@@ -34,8 +34,8 @@ class Party:
                 self.rv = random.choice(self.rvlist)
             else:
                 if(self.flag==1):
-                    prob = random.randint(1,5)
-                    if(prob < 3):
+                    prob = random.randint(1,4)
+                    if(prob < 4):
                         cur_pos = self.rvlist.index(self.rv)
                         if(cur_pos < len(self.rvlist)-1 ):
                             if(len(self.rvlist[cur_pos+1:]) > 0):
@@ -46,8 +46,8 @@ class Party:
                             self.rv = random.choice(self.rvlist[:cur_pos])
                         self.flag = -1
                 elif(self.flag == -1):
-                    prob = random.randint(1,5)
-                    if(prob < 3):
+                    prob = random.randint(1,4)
+                    if(prob < 4):
                         cur_pos = self.rvlist.index(self.rv)
                         if(cur_pos > 0):
                             if(len(self.rvlist[:cur_pos])>0):
@@ -58,27 +58,22 @@ class Party:
                             if(len(self.rvlist[cur_pos+1:]) > 0):
                                 self.rv = random.choice(self.rvlist[cur_pos+1:])
                         self.flag = 1
-            if self.strategy == "optimal":
-                self.utilitylist = self.optimalbidder(self.rvutils[self.rvlist.index(self.rv)],self.deadline)        #optimalbidder
-            else:
-                self.utilitylist = self.boulwareUtilities(self.rvutils[self.rvlist.index(self.rv)],self.deadline)      #boulware
-
-
+            self.utilitylist = self.boulwareUtilities(self.rvutils[self.rvlist.index(self.rv)],self.deadline)      #boulware
+            # self.utilitylist = self.optimalbidder(self.rvutils[self.rvlist.index(self.rv)],self.deadline)        #optimalbidder
         return self.rv
 
 
-    def initialiselistboulware(self,cur_rv):
-        if self.strategy == "optimal":
-            self.utilitylist = self.optimalbidder(cur_rv,self.deadline)
-        else:
-            self.utilitylist = self.boulwareUtilities(cur_rv,self.deadline)
+    def setutilityspace(self,issues):
+        for i in issues:
+            self.utilityspace[i] = random.uniform(0, 1)
+        self.utilitylist = self.boulwareUtilities(self.rv,self.deadline)
+       # print (self.utilitylist)
+       # print(self.utilityspace)
 
     def offerbid(self,round_number,strategy):
         if(strategy=="bayesian"):
             mystrategybid = self.bayesianutilitylist[round_number]
         elif(strategy=="boulware"):
-            mystrategybid = self.utilitylist[round_number]
-        elif(strategy=="optimal"):
             mystrategybid = self.utilitylist[round_number]
         elif(strategy=="counter"):
             mystrategybid = self.counterutilitylist[round_number]
@@ -100,8 +95,6 @@ class Party:
         if(strategy=="bayesian"):
             mystrategybid = self.bayesianutilitylist[round_number]
         elif(strategy=="boulware"):
-            mystrategybid = self.utilitylist[round_number]
-        elif(strategy=="optimal"):
             mystrategybid = self.utilitylist[round_number]
         elif(strategy=="counter"):
             mystrategybid = self.counterutilitylist[round_number]
@@ -129,7 +122,7 @@ class Party:
     def boulwareUtilities (self,rv,Deadline):
         # print("checkhere",rv)
         ut = []
-        beta = 0.2
+        beta = 0.06
         beta = float(1)/beta
         for i in range(1,Deadline+1):
             minm = min(i,Deadline)
@@ -146,18 +139,17 @@ class Party:
 
     def optimalbidder(self,rv,Deadline):
         ut = []
-        ut.append(.25+.25*rv)
-        for i in range(1,Deadline+1):
-            ut.append(.25+.25*math.pow(ut[i-1],2))
-        ut.reverse()
+        ut.append(.5+.5*rv)
+        for i in range(1,Deadline):
+            ut.append(.5+.5*math.pow(ut[i-1],2))
         return ut
     
     def utilitylistrv(self):
         self.myutilitiesrv = []
         # print("check",self.rvutils)
         for i in range(0,len(self.rvutils)):
-            self.myutilitiesrv.append(self.boulwareUtilities(self.rvutils[i],self.deadline))           ###### Boulware
-            # self.myutilitiesrv.append(self.optimalbidder(self.rvutils[i],self.deadline))               ####### OptimalBidder   
+            self.myutilitiesrv.append(self.boulwareUtilities(self.rvutils[i],self.deadline))
+            # self.myutilitiesrv.append(self.optimalbidder(self.rvutils[i],self.deadline))
 
 
     def beiliefplot(self):
@@ -306,8 +298,8 @@ class Party:
 
     def lstminitialize(self,updaterate,rounds,test_count):
         # print("Lstm here")
-        # self.lstmrv = np.load('LSTM/Data_100_4hyp/Preds/pred_fire'+str(updaterate)+'.npy')
-        self.lstmrv = np.load('LSTM/Meeting_Data_100_9hyp/Preds/pred_meet'+str(updaterate)+'.npy')
+        # self.lstmrv = np.load('LSTM/Data_100_4hyp/Preds/pred_fire'+str(updaterate)+'.npy')   ### 4 Hypo fire
+        self.lstmrv = np.load('LSTM/Data_100_2hyp/Preds/pred_fire'+str(updaterate)+'.npy')   ### 2 Hypo fire
         self.lstmrv = self.lstmrv.reshape(300,99)
         # print("here",self.lstmrv.shape)
         if(rounds>1):

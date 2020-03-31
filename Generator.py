@@ -26,7 +26,16 @@ def utilitygen(filename):
             for k in allist[2]:
                 ans[t] = i+j+k
                 t+=1
-    # print(ans)
+    temp = [ans[i] for i in ans]
+    mymin = min(temp)
+    temp = max(temp)
+    mymax = 0
+    mymin = 1000000000
+    for i in ans:
+        ans[i] = ans[i]/temp
+        mymax = max(mymax,ans[i])
+        mymin = min(mymin,ans[i])
+    # print("here",mymax,mymin)
     return ans
 # utilitygen('KillerRobot_util1.xml')
 # utilitygen('KillerRobot_util2.xml')
