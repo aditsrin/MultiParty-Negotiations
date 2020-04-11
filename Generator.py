@@ -36,7 +36,7 @@ def utilitygen(filename):
         mymax = max(mymax,ans[i])
         mymin = min(mymin,ans[i])
     # print("here",mymax,mymin)
+    ans  = {k: v for k, v in sorted(ans.items(), key=lambda item: item[1],reverse=True)}
     return ans
-# utilitygen('KillerRobot_util1.xml')
-# utilitygen('KillerRobot_util2.xml')
-# utilitygen('KillerRobot_util3.xml')
+# ref = utilitygen('Supermarket-A-prof1.xml')
+# print(ref)

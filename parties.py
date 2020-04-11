@@ -61,8 +61,8 @@ class Party:
             if self.strategy == "optimal":
                 self.utilitylist = self.optimalbidder(self.rvutils[self.rvlist.index(self.rv)],self.deadline)        #optimalbidder
             else:
+                # print("here",updaterate,self.rv,"round number",rounds,"party name",self.name,'rv util',self.rvutils[self.rvlist.index(self.rv)])
                 self.utilitylist = self.boulwareUtilities(self.rvutils[self.rvlist.index(self.rv)],self.deadline)      #boulware
-
 
         return self.rv
 
@@ -77,14 +77,16 @@ class Party:
         if(strategy=="bayesian"):
             mystrategybid = self.bayesianutilitylist[round_number]
         elif(strategy=="boulware"):
+            # self.utilitylist = self.bayesianutilitylist(self.rvutils[self.rvlist.index(self.rv)],self.deadline)  #boulware
             mystrategybid = self.utilitylist[round_number]
         elif(strategy=="optimal"):
+            # self.utilitylist = self.optimalbidder(self.rvutils[self.rvlist.index(self.rv)],self.deadline)        #optimalbidder
             mystrategybid = self.utilitylist[round_number]
         elif(strategy=="counter"):
             mystrategybid = self.counterutilitylist[round_number]
         elif(strategy=="lstm"):
             mystrategybid = self.lstmutilitylist[round_number]
-        closest_value = 2
+        closest_value = 200
         utility_return = mystrategybid
         # print("offering",mystrategybid,self.name,self.strategy)
         for issue_vals in self.utilityspace:
@@ -107,7 +109,7 @@ class Party:
             mystrategybid = self.counterutilitylist[round_number]
         elif(strategy=="lstm"):
             mystrategybid = self.lstmutilitylist[round_number]
-        closest_value = 2
+        closest_value = 200
         utility_return = mystrategybid        
         # print("evaluating",mystrategybid,self.name,self.strategy)
         for issue_vals in self.utilityspace:
@@ -288,7 +290,6 @@ class Party:
         ans = self.rvlist[ans]
         return ans
     def lstmcountsupdate(self,rounds,test_count):
-        # print(rounds,test_count)
         cur_rv = self.lstmrv[test_count][rounds-1]
         cur_rv = self.findclosest(cur_rv)
         cur_pos = self.rvlist.index(cur_rv)
