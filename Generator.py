@@ -1,5 +1,6 @@
 import xml.etree.ElementTree as ET
 import numpy as np
+import itertools
 def utilitygen(filename):
     tree = ET.parse(filename)
     root = tree.getroot()
@@ -21,11 +22,10 @@ def utilitygen(filename):
     # print(allist)
     ans = {}
     t=1
-    for i in allist[0]:
-        for j in allist[1]:
-            for k in allist[2]:
-                ans[t] = i+j+k
-                t+=1
+    productlist = list(itertools.product(*allist))
+    for i in productlist:
+        ans[t] = sum(list(i))
+        t+=1 
     temp = [ans[i] for i in ans]
     mymin = min(temp)
     temp = max(temp)
@@ -37,6 +37,13 @@ def utilitygen(filename):
         mymin = min(mymin,ans[i])
     # print("here",mymax,mymin)
     ans  = {k: v for k, v in sorted(ans.items(), key=lambda item: item[1],reverse=True)}
+    sortkeys = list(ans.keys())
+    n = len(sortkeys)
+    check = {}
+    for i in range(1,n+1):
+        check[i] = ans[sortkeys[i-1]]
     return ans
-# ref = utilitygen('Supermarket-A-prof1.xml')
+# ref = utilitygen('KillerRobot_util1.xml')
+# ref2 = utilitygen('KillerRobot_util2.xml')
 # print(ref)
+# print(ref2)

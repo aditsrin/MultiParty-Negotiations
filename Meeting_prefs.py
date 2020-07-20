@@ -11,12 +11,12 @@ def shuffler(prefs):
 	return temp
 def meeting():
 	delay = [i for i in range(61)]
-	# alphas = [1.4,1.41,1.42,1.43,1.44]
-	alphas = [1.4,1.42,1.44]
+	alphas = [1.44,1.42,1.4,1.38,1.36]
+	# alphas = [1.4,1.41,1.42,1.43]
 	alpha = 1.35
 	value = 800
-	# values = [750,738,742,734,729]
-	values = [750,700,730]
+	values = [750,742,738,734,730]
+	# values = [750,738,742]
 	preferences = []
 	for i in range(len(alphas)):
 		costs = {}
@@ -25,6 +25,7 @@ def meeting():
 		for j in delay:
 			cost = (values[i] - (j**alphas[i])*2)/value
 			costs[j]= cost
+			# costs[check[j]]= cost            //random commented
 		preferences.append(costs)
 	# preferences =  shuffler(preferences)
 	# for cost in preferences:

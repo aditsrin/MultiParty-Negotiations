@@ -65,7 +65,7 @@ def Negotiation(deadline,parties,updaterate,test_count):
                     if(j!=i):
                         testlist[j].append(templist[j])
                 testlist[i].append(current_bid)
-                # print("Negotiation Successfull Offered by Party #",bidding_party.name," in round number",rounds,testlist,bidding_party.strategy)
+                # print("Negotiation Successfull Offered by Party #",bidding_party.name," in round number",rounds)
                 # print("***********************************************************************************************************************")
                 return current_bid
             else:
@@ -126,28 +126,56 @@ def testbench(parties,prefs):
     np.save('prefwise',prefwise)
     # np.savetxt("prefwise.csv",prefwise, delimiter=",")
 
-def averagetests(parties,prefs):
+def checkplots(parties):
+    hyp = copy.deepcopy(parties[0].rvlist)
+    ct = 3
+    for p in range(3):
+        party = parties[p]
+        print(party.strategy)
+        print("************************************************************************************************************************")
+        print(party.Probabilitylist)
+        # for j in range(len(hyp)):
+        #     temp = []
+        #     for k in range(len(party.Probabilitylist)):
+        #         temp.append(party.Probabilitylist[k][j])
+        #     plt.title("For hypothesis "+str(hyp[j])+" the biliefs are for agent " + str(party.strategy))
+        #     plt.plot(temp)
+        #     plt.savefig('./Images'+str(party.strategy)+'_'+str(hyp[j])+'.png')
+        #     plt.close()
+    # for j in range(len(hyp)):
+    #     for party in parties:
+    #         temp = []
+    #         for k in range(len(party.Probabilitylist)):
+    #             temp.append(party.Probabilitylist[k][j])
+    #         plt.plot(temp,label=party.strategy)
+    #     plt.legend()
+    #     plt.title('Meeting Hypothesis: '+str(hyp[j]))
+    #     plt.savefig('./Images/Meeting Hypothesis_  '+str(hyp[j])+'.png')
+    #     plt.close()
+
+def averagetests(prefs):
     global testlist
     deadline = 100
-    tests = 20
+    tests = 100
     updaterates = [2,5,10,20,50]
-    # updaterates = [50]
+    # updaterates = [2]
     pref_names = ['pref'+str(i+1) for i in range(len(prefs))]
     perms = list(itertools.permutations(prefs))
     perm_names = list(itertools.permutations(pref_names))
-    # perms = [prefs]
-    # pref_names = [pref_names]
+    perms = [prefs]
+    perm_names = [pref_names]
     updatewiselist = []
     for update in updaterates:
         print("Update Rate:",update)
         mylist = []
-        ct = 0
+        ct = [0]*len(pref_names)
         for i in range(tests):
-            parties = initialiseparties()
-            print("TEST NUMBER:",i)
-            print("###################################################################################")
-            testlist= [[] for j in range(len(parties))]
+            # parties = initialiseparties()
+            # print("TEST NUMBER:",i)
+            # print("###################################################################################")
+            testlist= [[] for j in range(len(prefs))]
             for curlist,names in zip(perms,perm_names):
+                parties = initialiseparties()
                 for j in range(len(curlist)):
                     parties[j].utilityspace = curlist[j]
                     parties[j].rvlist = [i for i in range(5,50,5)] 
@@ -159,30 +187,33 @@ def averagetests(parties,prefs):
                     # print("Party ",j+1,"Profile ==> ",names[j],end='   ')
                 # print()
                 Negotiation(deadline,parties,update,i)
-            print("Average result over preferences: ",[round(np.mean(testlist[j]),3) for j in range(len(testlist))]) 
             # print(testlist)
+                # checkplots(parties)
+            # print("Average result over preferences: ",[round(np.mean(testlist[j]),3) for j in range(len(testlist))]) 
+            mylist.append(copy.deepcopy([round(np.mean(testlist[j]),3) for j in range(len(testlist))]))
             temp =  copy.deepcopy([round(np.mean(testlist[j]),3) for j in range(len(testlist))])
-            if(temp.index(max(temp))==0):
-                ct+=1
+            ct[temp.index(max(temp))]+=1
+        ct = np.array(ct)
         print("Wins %",ct/tests*100)
-            mylist.append([round(np.mean(testlist[j]),3) for j in range(len(testlist))])
         mylist = np.array(mylist)
-        updatewiselist.append(mylist)
-    updatewiselist = np.array(updatewiselist)
-    np.save('update_results',updatewiselist)
-    # np.savetxt("updatewise.csv",updatewiselist, delimiter=",")
+        print(mylist.shape)
+        np.save('./MeetingResults/fiveagents/Boulware/Meeting_Results_Utils_'+str(update),mylist)
+        # np.save('./MeetingResults/fiveagents/Optimal/Meeting_Results_Utils_'+str(update),mylist)
+    # np.save('update_results',updatewiselist)
 
 def initialiseparties():
     random.seed(datetime.datetime.now())
     parties = []
     deadline = 100
-    number_of_parties =  3
+    number_of_parties =  5
     for partynames in range(1,number_of_parties+1):
         tempparty = Party(str(partynames),deadline)
         parties.append(tempparty)
     parties[0].strategy = 'bayesian'
     parties[1].strategy = 'counter'
     parties[2].strategy = 'lstm'
+    parties[4].strategy = 'boulware'
+    parties[3].strategy = 'optimal'
     return parties
 
 def main():
@@ -194,6 +225,6 @@ def main():
     print("Starting Negotiation Protocol")
     print("Meeting Domain")
     # testbench(parties,prefs)
-    averagetests(parties,prefs)
+    averagetests(prefs)
 if __name__ == '__main__':
     main()

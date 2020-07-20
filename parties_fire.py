@@ -1,6 +1,7 @@
 import random
 import math,datetime
 import numpy as np
+import copy
 class Party:
     '''This is Party Class'''
     def __init__(self,name,deadline):
@@ -9,9 +10,9 @@ class Party:
         self.response = ["Yes","No"]
         self.rv = 0.0
         self.deadline = deadline
-        self.rvlist = [0.12,0.321,0.57,0.75]
+        # self.rvlist = [0.12,0.321,0.57,0.75]
         # self.rvlist = [i for i in range(5,50,5)]   ## utility of rvs
-        # self.rvlist = [0.12,0.75]
+        self.rvlist = [0.1,0.9]
         self.flag = 1
         self.roundrvlist =  []
         self.means_offers = []
@@ -24,12 +25,15 @@ class Party:
         self.lstmlist = [0]*len(self.rvlist)
         self.lstmutilitylist = []
         self.optimallist = []
+        self.probupdatesround = []
+        self.Probabilitylist = []
+        self.roundproblist = []
+
     def checkupdate(self,updateflag,rounds,updaterate):
         if(updateflag==False):
             pass
         else:
             # print(updateflag,updaterate,rounds)
-            # print("here")
             if(rounds==1):
                 self.rv = random.choice(self.rvlist)
             else:
@@ -58,33 +62,45 @@ class Party:
                             if(len(self.rvlist[cur_pos+1:]) > 0):
                                 self.rv = random.choice(self.rvlist[cur_pos+1:])
                         self.flag = 1
+                # print("updating rv",self.rv)
             if self.strategy == "optimal":
                 self.utilitylist = self.optimalbidder(self.rvutils[self.rvlist.index(self.rv)],self.deadline)        #optimalbidder
+            elif self.strategy == "boulware":
+                self.utilitylist = self.boulwareUtilities(self.rvutils[self.rvlist.index(self.rv)],self.deadline)      #boulware
             else:
                 self.utilitylist = self.boulwareUtilities(self.rvutils[self.rvlist.index(self.rv)],self.deadline)      #boulware
+                # self.utilitylist = self.optimalbidder(self.rvutils[self.rvlist.index(self.rv)],self.deadline)        #optimalbidder
+
         return self.rv
 
 
     def initialiselistboulware(self,cur_rv):
         if self.strategy == "optimal":
-            self.utilitylist = self.optimalbidder(cur_rv,self.deadline)
+            self.utilitylist = self.optimalbidder(cur_rv,self.deadline)  #optimal
+        elif self.strategy == "boulware":
+            self.utilitylist = self.boulwareUtilities(cur_rv,self.deadline) #boulware
         else:
-            self.utilitylist = self.boulwareUtilities(cur_rv,self.deadline)
+            self.utilitylist = self.boulwareUtilities(cur_rv,self.deadline) #boulware
+            # self.utilitylist = self.optimalbidder(cur_rv,self.deadline)  #optimal
+
 
     def offerbid(self,round_number,strategy):
         if(strategy=="bayesian"):
             mystrategybid = self.bayesianutilitylist[round_number]
+            # print("offering",mystrategybid,self.strategy,self.bayesianutilitylist)
         elif(strategy=="boulware"):
             mystrategybid = self.utilitylist[round_number]
         elif(strategy=="optimal"):
             mystrategybid = self.utilitylist[round_number]
+            # print("offering",mystrategybid,self.strategy)
         elif(strategy=="counter"):
             mystrategybid = self.counterutilitylist[round_number]
+            # print("offering",mystrategybid,self.strategy,self.counterutilitylist)
         elif(strategy=="lstm"):
             mystrategybid = self.lstmutilitylist[round_number]
+            # print("offering",mystrategybid,self.strategy,self.lstmutilitylist)
         closest_value = 2
         utility_return = mystrategybid
-        # print("offering",mystrategybid,self.name,self.strategy)
         for issue_vals in self.utilityspace:
             temp = min(closest_value,abs(self.utilityspace[issue_vals]-mystrategybid))
             if(temp<closest_value):
@@ -116,12 +132,12 @@ class Party:
                 index = issue_vals
         opponent_offered = self.utilityspace[bid_issue]
         # print("The bid offered by the current bidding party is ",offered_value," and the bid issue is",bid_issue," and my utility for this issue is ",opponent_offered)
-        # print("The current utility of the party is",utility_return)
+        # print("The current utility of the party is",utility_return,self.strategy)
         if(opponent_offered > utility_return):
             # print("Oh higher bid offered..accepting..")
             return "Yes",opponent_offered
         else:
-                # print("Oh lower bid offered..rejecting..")
+            # print("Oh lower bid offered..rejecting..")
             return "No",opponent_offered
 
     def boulwareUtilities (self,rv,Deadline):
@@ -146,7 +162,8 @@ class Party:
         ut = []
         ut.append(.25+.25*rv)
         for i in range(1,Deadline):
-            ut.append(.25+.25*math.pow(ut[i-1],2))
+            ut.append(.25*math.pow(ut[i-1]+1,2))
+        ut.reverse()
         return ut
     
     def utilitylistrv(self):
@@ -155,21 +172,19 @@ class Party:
         for i in range(0,len(self.rvutils)):
             self.myutilitiesrv.append(self.boulwareUtilities(self.rvutils[i],self.deadline))
             # self.myutilitiesrv.append(self.optimalbidder(self.rvutils[i],self.deadline))
-
+        # print(self.myutilitiesrv)
 
     def beiliefplot(self):
-        self.Probabilitylist = []
-        self.roundproblist = []
         for i in range(0,len(self.rvutils)):
             self.roundproblist.append(1.0/len(self.rvutils))
-        self.Probabilitylist.append(self.roundproblist)
+        self.Probabilitylist.append(copy.deepcopy(self.roundproblist))
     
     def mypedictedrvs(self,roundnum):
         self.predictedrvs = []
         for rvs in self.rvutils:
             self.predictedrvs.append(self.tempgenerate(rvs,self.deadline,roundnum,self.roundrvlist))
         self.Means()
-        if(roundnum > 1):
+        if(roundnum >= 1):
             # print("check here boi",self.means_offers)
             self.calculategamma(self.predictedrvs,self.means_offers,self.roundrvlist,np.mean(self.roundrvlist))
             # print("asfafafafew",self.gamma,"new gamma here",self.new_gamma)
@@ -247,13 +262,17 @@ class Party:
                 new_probability[i]=0.0002
             if(new_probability[i]>=0.9998):
                 new_probability[i]=0.9998
-            self.Probabilitylist.append(new_probability)                 ###check here for resolving
+        # self.Probabilitylist.append(new_probability)                 ###check here for resolving
+        self.Probabilitylist.append(copy.deepcopy(new_probability))
+
 
     def generatebayesianutility(self,roundnum):
         bayesian_utility = 0
+        # print(self.roundproblist)   
         for i in range(0,len(self.roundproblist)):
             bayesian_utility += self.roundproblist[i]*self.myutilitiesrv[i][roundnum]
         self.bayesianutilitylist.append(bayesian_utility)
+
     def updatecounts(self):
         cur_rv = self.rv
         cur_pos =self.rvlist.index(self.rv)
@@ -261,8 +280,10 @@ class Party:
     def updateprobscounter(self):
         for i in range(0,len(self.rvlist)):
             self.roundproblist[i] = self.countlist[i]/np.sum(self.countlist)
+        self.Probabilitylist.append(copy.deepcopy(self.roundproblist))
+        # print("here",self.roundproblist,self.countlist,self.Probabilitylist)
     def counterinitialize(self,rounds):
-        if(rounds >1):
+        if(rounds >=1):
             self.updatecounts()
             #print("checking counter",self.countlist)
             self.updateprobscounter()
@@ -294,7 +315,9 @@ class Party:
     def updatelstmpreds(self):
         for i in range(len(self.rvlist)):
             self.roundproblist[i] = self.lstmlist[i]/np.sum(self.lstmlist)
-    
+        self.Probabilitylist.append(copy.deepcopy(self.roundproblist))
+
+
     def generate_lstmrules(self,roundnum):
         lstm_utlity = 0
         for i in range(len(self.roundproblist)):
@@ -303,11 +326,11 @@ class Party:
 
     def lstminitialize(self,updaterate,rounds,test_count):
         # print("Lstm here")
-        self.lstmrv = np.load('LSTM/Data_100_4hyp/Preds/pred_fire'+str(updaterate)+'.npy')   ### 4 Hypo fire
-        # self.lstmrv = np.load('LSTM/Data_100_2hyp/Preds/pred_fire'+str(updaterate)+'.npy')   ### 2 Hypo fire
+        # self.lstmrv = np.load('LSTM/Data_100_4hyp/Preds/pred_fire'+str(updaterate)+'.npy')   ### 4 Hypo fire
+        self.lstmrv = np.load('LSTM/Data_100_2hyp/Preds/pred_fire'+str(updaterate)+'.npy')   ### 2 Hypo fire
         self.lstmrv = self.lstmrv.reshape(300,99)
         # print("here",self.lstmrv.shape)
-        if(rounds>1):
+        if(rounds>=1):
             self.lstmcountsupdate(rounds,test_count)
             self.updatelstmpreds()
         self.generate_lstmrules(rounds)

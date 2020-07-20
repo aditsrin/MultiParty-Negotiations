@@ -1,6 +1,7 @@
 import random
 import math,datetime
 import numpy as np
+import copy
 class Party:
     '''This is Party Class'''
     def __init__(self,name,deadline):
@@ -24,6 +25,9 @@ class Party:
         self.lstmlist = [0]*len(self.rvlist)
         self.lstmutilitylist = []
         self.optimallist = []
+        self.Probabilitylist = []
+        self.roundproblist = []
+
     def checkupdate(self,updateflag,rounds,updaterate):
         if(updateflag==False):
             pass
@@ -60,9 +64,13 @@ class Party:
                         self.flag = 1
             if self.strategy == "optimal":
                 self.utilitylist = self.optimalbidder(self.rvutils[self.rvlist.index(self.rv)],self.deadline)        #optimalbidder
+            elif self.strategy == "boulware":
+                self.utilitylist = self.boulwareUtilities(self.rvutils[self.rvlist.index(self.rv)],self.deadline)      #boulware
             else:
                 # print("here",updaterate,self.rv,"round number",rounds,"party name",self.name,'rv util',self.rvutils[self.rvlist.index(self.rv)])
                 self.utilitylist = self.boulwareUtilities(self.rvutils[self.rvlist.index(self.rv)],self.deadline)      #boulware
+                # self.utilitylist = self.optimalbidder(self.rvutils[self.rvlist.index(self.rv)],self.deadline)        #optimalbidder
+
 
         return self.rv
 
@@ -70,17 +78,19 @@ class Party:
     def initialiselistboulware(self,cur_rv):
         if self.strategy == "optimal":
             self.utilitylist = self.optimalbidder(cur_rv,self.deadline)
+        elif self.strategy == "boulware":
+            self.utilitylist = self.boulwareUtilities(cur_rv,self.deadline)
         else:
             self.utilitylist = self.boulwareUtilities(cur_rv,self.deadline)
+            # self.utilitylist = self.optimalbidder(cur_rv,self.deadline)
+
 
     def offerbid(self,round_number,strategy):
         if(strategy=="bayesian"):
             mystrategybid = self.bayesianutilitylist[round_number]
         elif(strategy=="boulware"):
-            # self.utilitylist = self.bayesianutilitylist(self.rvutils[self.rvlist.index(self.rv)],self.deadline)  #boulware
             mystrategybid = self.utilitylist[round_number]
         elif(strategy=="optimal"):
-            # self.utilitylist = self.optimalbidder(self.rvutils[self.rvlist.index(self.rv)],self.deadline)        #optimalbidder
             mystrategybid = self.utilitylist[round_number]
         elif(strategy=="counter"):
             mystrategybid = self.counterutilitylist[round_number]
@@ -149,8 +159,8 @@ class Party:
     def optimalbidder(self,rv,Deadline):
         ut = []
         ut.append(.25+.25*rv)
-        for i in range(1,Deadline+1):
-            ut.append(.25+.25*math.pow(ut[i-1],2))
+        for i in range(1,Deadline):
+            ut.append(.25*math.pow(ut[i-1]+1,2))
         ut.reverse()
         return ut
     
@@ -163,19 +173,18 @@ class Party:
 
 
     def beiliefplot(self):
-        self.Probabilitylist = []
-        self.roundproblist = []
+        # print("asfadgdsgdsgdsfsdgdsgsdgdsgdsgsdgsdg")
         for i in range(0,len(self.rvutils)):
             self.roundproblist.append(1.0/len(self.rvutils))
-        self.Probabilitylist.append(self.roundproblist)
+        self.Probabilitylist.append(copy.deepcopy(self.roundproblist))
     
     def mypedictedrvs(self,roundnum):
         self.predictedrvs = []
         for rvs in self.rvutils:
             self.predictedrvs.append(self.tempgenerate(rvs,self.deadline,roundnum,self.roundrvlist))
         self.Means()
-        if(roundnum > 1):
-            # print("check here boi",self.means_offers)
+        if(roundnum >= 1):
+            # print("check here boi",self.roundrvlist)
             self.calculategamma(self.predictedrvs,self.means_offers,self.roundrvlist,np.mean(self.roundrvlist))
             # print("asfafafafew",self.gamma,"new gamma here",self.new_gamma)
             self.updateprobs(self.roundproblist)
@@ -252,22 +261,28 @@ class Party:
                 new_probability[i]=0.0002
             if(new_probability[i]>=0.9998):
                 new_probability[i]=0.9998
-            self.Probabilitylist.append(new_probability)                 ###check here for resolving
+            # self.Probabilitylist.append(new_probability)                 ###check here for resolving
+        self.Probabilitylist.append(copy.deepcopy(new_probability))
 
     def generatebayesianutility(self,roundnum):
         bayesian_utility = 0
-        for i in range(0,len(self.roundproblist)):
+        # print(self.roundproblist)
+        for i in range(len(self.roundproblist)):
             bayesian_utility += self.roundproblist[i]*self.myutilitiesrv[i][roundnum]
         self.bayesianutilitylist.append(bayesian_utility)
+
     def updatecounts(self):
         cur_rv = self.rv
         cur_pos =self.rvlist.index(self.rv)
         self.countlist[cur_pos]+=1
+
     def updateprobscounter(self):
         for i in range(0,len(self.rvlist)):
             self.roundproblist[i] = self.countlist[i]/np.sum(self.countlist)
+        self.Probabilitylist.append(copy.deepcopy(self.roundproblist))
+
     def counterinitialize(self,rounds):
-        if(rounds >1):
+        if(rounds >=1):
             self.updatecounts()
             #print("checking counter",self.countlist)
             self.updateprobscounter()
@@ -298,7 +313,8 @@ class Party:
     def updatelstmpreds(self):
         for i in range(len(self.rvlist)):
             self.roundproblist[i] = self.lstmlist[i]/np.sum(self.lstmlist)
-    
+        self.Probabilitylist.append(copy.deepcopy(self.roundproblist))
+
     def generate_lstmrules(self,roundnum):
         lstm_utlity = 0
         for i in range(len(self.roundproblist)):
@@ -311,7 +327,7 @@ class Party:
         self.lstmrv = np.load('LSTM/Meeting_Data_100_9hyp/Preds/pred_meet'+str(updaterate)+'.npy')
         self.lstmrv = self.lstmrv.reshape(300,99)
         # print("here",self.lstmrv.shape)
-        if(rounds>1):
+        if(rounds>=1):
             self.lstmcountsupdate(rounds,test_count)
             self.updatelstmpreds()
         self.generate_lstmrules(rounds)

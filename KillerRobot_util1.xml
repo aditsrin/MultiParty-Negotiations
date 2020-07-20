@@ -34,7 +34,7 @@
 <item index="5" value="Soundwave" evaluation="4"> 
 </item> 
 </issue> 
-<!-- <issue index="5" name="Color" vtype="discrete" type="discrete" etype="discrete"> 
+<issue index="5" name="Color" vtype="discrete" type="discrete" etype="discrete"> 
 <item index="1" value="Red" evaluation="4"> 
 </item> 
 <item index="2" value="Green" evaluation="3"> 
@@ -51,7 +51,7 @@
 </item> 
 <item index="8" value="Silver" evaluation="7"> 
 </item> 
-</issue>  -->
+</issue> 
 <!-- <issue index="6" name="Height (m)" lowerbound="1" upperbound="50" vtype="integer" type="integer" etype="integer"> 
 <evaluator slope="-0.012244897959183673" offset="1.0" ftype="linear"> 
 </evaluator> 
@@ -64,8 +64,8 @@
 </weight>  -->
 <weight index="4" value="0.16216554312686268"> 
 </weight> 
-<!-- <weight index="5" value="0.23003625568900224"> 
-</weight>  -->
+<weight index="5" value="0.23003625568900224"> 
+</weight> 
 <!-- <weight index="6" value="0.1650477740723188"> 
 </weight>  -->
 </objective> 
