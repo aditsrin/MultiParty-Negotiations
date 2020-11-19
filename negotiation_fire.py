@@ -18,6 +18,8 @@ def Negotiation(deadline,parties,updaterate,test_count):
     mycounterparty.strategy = "counter"
     mybayesian = parties[0]
     mybayesian.strategy = "bayesian" ###my agent bayesian
+    check_me = []
+    check = [[] for i in range(4)]
     for rounds in range(deadline):
         # print('Round ',rounds)
         #time.sleep(1)
@@ -26,15 +28,24 @@ def Negotiation(deadline,parties,updaterate,test_count):
             updateflag = True
         for party in parties:
             party.checkupdate(updateflag,rounds,updaterate)
+            # party.testupdate(updateflag,rounds,updaterate)
         for party in parties:
             try:
                 party.roundrvlist.append(party.rvutils[party.rvlist.index(party.rv)])
             except:
                 party.roundrvlist.append(0.0)
-        # print("yoboi",mybayesian.roundrvlist)
+
+        #########################################Prediction code##########################################################
+        if(rounds>=100):
+            continue
+        #########################################Prediction code##########################################################
+
+        # print("*********************Round NUMBER*****************************",rounds)
+
         mybayesian.mypedictedrvs(rounds)                      ##Bayesian commented
         myparty.lstminitialize(updaterate,rounds,test_count)
         mycounterparty.counterinitialize(rounds)
+       
         #print("idhr",myparty.predictedrvs)
         # if rounds > 1:
         for i in range(len(parties)):
@@ -46,10 +57,12 @@ def Negotiation(deadline,parties,updaterate,test_count):
             votesevaluater = False
             tempcheck = False
             templist = [0 for i in range(len(parties))]
+            # check[i].append(current_bid)
             for j in range(len(parties)):
                 party = parties[j]
                 if party!=bidding_party:
                     partyresponse,partyvalue = party.evaluate_bid_and_vote(current_bid,bid_issue,rounds,party.strategy)
+                    # check[j].append(partyvalue)
                     if(partyresponse=="No"):
                         votesevaluater = False
                         # templist = [0]*len(parties)
@@ -64,11 +77,15 @@ def Negotiation(deadline,parties,updaterate,test_count):
                     if(j!=i):
                         testlist[j].append(templist[j])
                 testlist[i].append(current_bid)
-                # print("Negotiation Successfull Offered by Party #",bidding_party.name," in round number",rounds,testlist)
+                # print("Negotiation Successfull Offered by Party #",bidding_party.name," in round number",rounds)
                 # print(len(parties[0].bayesianutilitylist),len(parties[1].counterutilitylist))
-                return current_bid,bidding_party.name
+                # return current_bid,bidding_party.name
             else:
                 continue
+        # print("test",check)
+    #     check_data = np.array(check)
+    # np.save('checkdata',check_data)
+    # print(check_data)
     # print("Sorry Deadline is over and negotiation could not be completed")
     #print(parties[1].bayesianutilitylist,parties[2].counterutilitylist)
     return  0.0,None
@@ -106,7 +123,8 @@ def testbench(prefs):
         for j in range(len(curlist)):
             parties[j].utilityspace = curlist[j]
             # print(parties[j].utilityspace)
-            parties[j].rvlist = [.12,.35,.51,.75]        ## 4 Hypo fire    
+            parties[j].rvlist = [.12,.35,.51,.75]        ## 4 Hypo fire  
+            # parties[j].rvlist = [.15,.32,.57,.75]        ## test Hypo fire      
             # parties[j].rvlist = [.12,.75]              #@@@@ 2 Hypo Fire
             parties[j].rvutils = closehelper(parties[j].utilityspace,parties[j].rvlist)
             # parties[j].rvlist = [i/50 for i in parties[j].rvlist]
@@ -136,11 +154,20 @@ def testbench(prefs):
         print("Final Result",' '.join(list(Final_Means)))
 
 def checkplots(parties):
-    hyp = [.1,.9] 
+    hyp = copy.deepcopy(parties[0].rvlist)
     colors = ['r','g','b']
     styles = ['solid','dotted','dashed']
     markers = ['o','^','d']
+    agents = ['BLRA','COUNTER','LSTM']
     font = {'weight' : 'bold','size'   : 13 }
+    # preds  = []
+    # for j in range(3):
+    #     party = parties[j]
+    #     # print(party.strategy)
+    #     # print("************************************************************************************************************************")
+    #     # print(party.Probabilitylist)
+    #     preds.append(np.abs(party.rv-np.sum(np.dot(party.Probabilitylist[-1],hyp))))
+    # return preds
     for i in range(len(hyp)):
         for j in range(3):
             party = parties[j]
@@ -154,7 +181,7 @@ def checkplots(parties):
                 data.append(probs[i])
             # print(data)
             x = [i in range(1,101)]
-            plt.plot(data,label=party.strategy,c=colors[j],linestyle = styles[j],linewidth=2, markersize=2,marker=markers[j])
+            plt.plot(data,label=agents[j],c=colors[j],linestyle = styles[j],linewidth=2, markersize=2,marker=markers[j])
         # fig = plt.figure(figsize=(10,5))
         legend_properties = {'weight':'bold', 'size':10}
         plt.legend(prop=legend_properties,bbox_to_anchor=(1,.8), loc=1)
@@ -165,13 +192,33 @@ def checkplots(parties):
         plt.title("Belief Plot "+str(i+1),**font)
         # plt.show()
         # plt.title('Boulware Belief Plots for Hypothesis '+str(hyp[i]))
-        plt.savefig('./Images/Boulware_Belief_Plot_Hyp '+str(hyp[i])+'.pdf',format='pdf', dpi=500)
+        plt.savefig('./Images/thesis '+str(hyp[i])+'.pdf',format='pdf', dpi=500)
         plt.close()
-
-    # for party in parties:
-    #     print(party.strategy)
-    #     print("************************************************************************************************************************")
-    #     print(party.Probabilitylist)
+    # mypreds = []
+    # for j in range(3):
+    #     party = parties[j]
+    #     # print("********************************************Party Strategy*********************************************************",party.strategy)
+    #     # print(len(party.Probabilitylist))
+    #     # print('rvutils',party.rvutils)
+    #     # print('roundsrv',len(party.roundrvlist))
+    #     preds = []
+    #     for i in range(70,100):
+    #         pred_val = np.sum(np.dot(np.array(party.Probabilitylist[i]),np.array(party.rvutils)))
+    #         preds.append(np.abs(pred_val-party.roundrvlist[i]))
+    #     # print(preds)
+    # #     plt.plot(preds,label=agents[j],linestyle=styles[j],c=colors[j],linewidth=2,markersize=2,marker=markers[j])
+    # # legend_properties = {'weight':'bold', 'size':10}
+    # # plt.legend(prop=legend_properties)
+    # # plt.yticks(fontsize=10,fontweight='bold')
+    # # plt.xticks(fontsize=10,fontweight='bold')
+    # # plt.xlabel("Rounds",**font)
+    # # plt.ylabel("Prediction at each round",**font)
+    # # plt.show()
+    #     mypreds.append(np.mean(preds))
+    # return mypreds
+        # print("SUM Predictions",np.sum(preds))
+        # print("AVG Predictions",np.mean(preds))
+        # print('roundsrv',party.roundrvlist)
     #     for j in range(len(hyp)):
     #         temp = []
     #         for k in range(len(party.Probabilitylist)):
@@ -204,10 +251,12 @@ def averagetests(prefs):
     perm_names = list(itertools.permutations(pref_names))
     perms = [prefs]
     perm_names = [pref_names]
+    update_preds = []
     for update in updaterates:
         print("Update Rate:",update)
         ct = [0]*len(pref_names)
         mylist = []
+        testpreds = []
         for i in range(tests):
             # parties = initialiseparties()
             # print("TEST NUMBER:",i)
@@ -218,8 +267,10 @@ def averagetests(prefs):
                 for j in range(len(curlist)):
                     parties[j].utilityspace = curlist[j]
                     # parties[j].rvlist = [.12,.35,.51,.75]        ## 4 Hypo fire 
-                    parties[j].rvlist = [.1,.9]        ## 2 Hypo fire    
+                    parties[j].rvlist = [.12,.75]        ## 2 Hypo fire  
+                    # parties[j].rvlist = [.75 for i in range (101)]  
                     parties[j].rvutils = closehelper(parties[j].utilityspace,parties[j].rvlist)
+                    # print('here',parties[j].strategy,parties[j].rvutils)
                     parties[j].initialiselistboulware(random.choice(parties[j].rvlist))
                     parties[j].utilitylistrv()
                     parties[j].beiliefplot()
@@ -229,17 +280,23 @@ def averagetests(prefs):
                 # print("here",val,"party",par)
             # print(testlist)
             # print("Average result over preferences: ",[round(np.mean(testlist[j]),3) for j in range(len(testlist))]) 
-            checkplots(parties)
+            partypreds = checkplots(parties)
+            # checkplots(parties)
+            testpreds.append(partypreds)
             mylist.append(copy.deepcopy([round(np.mean(testlist[j]),3) for j in range(len(testlist))]))
             temp =  copy.deepcopy([round(np.mean(testlist[j]),3) for j in range(len(testlist))])
             ct[temp.index(max(temp))]+=1
         ct = np.array(ct)
         print("Wins %",ct/tests*100)
         mylist = np.array(mylist)
+        # print(mylist)
+        update_preds.append(np.mean(np.array(testpreds),axis=0))
+    print("Predictions")
+    print(update_preds)
         # print(mylist.shape)
         # np.save('./Results/Fire_Results_Utils_'+str(update),mylist)
         # np.save('./Results/fouragents/Boulware/Fire4_Results_Utils_'+str(update),mylist)
-        np.save('./Results/fiveagents/Boulware/Fire2_Results_Utils_'+str(update),mylist)
+        # np.save('./Results/fiveagents/Boulware/Fire2_Results_Utils_'+str(update),mylist)
 
 def initialiseparties():
     random.seed(datetime.datetime.now())

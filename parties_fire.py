@@ -10,9 +10,10 @@ class Party:
         self.response = ["Yes","No"]
         self.rv = 0.0
         self.deadline = deadline
-        # self.rvlist = [0.12,0.321,0.57,0.75]
+        self.rvlist = [0.12,0.321,0.57,0.75]
+        # self.rvlist = [.75 for i in range (101)]
         # self.rvlist = [i for i in range(5,50,5)]   ## utility of rvs
-        self.rvlist = [0.1,0.9]
+        # self.rvlist = [0.12,0.75]
         self.flag = 1
         self.roundrvlist =  []
         self.means_offers = []
@@ -73,6 +74,23 @@ class Party:
 
         return self.rv
 
+    def testupdate(self,updateflag,rounds,updaterate):
+        if(updateflag==False):
+            pass
+        else:
+            if(rounds==1):
+                self.rv = .75
+            else:
+                self.rv = self.rvlist[self.rvlist.index(self.rv)+1]
+            if self.strategy == "optimal":
+                self.utilitylist = self.optimalbidder(self.rvutils[self.rvlist.index(self.rv)],self.deadline)        #optimalbidder
+            elif self.strategy == "boulware":
+                self.utilitylist = self.boulwareUtilities(self.rvutils[self.rvlist.index(self.rv)],self.deadline)      #boulware
+            else:
+                self.utilitylist = self.boulwareUtilities(self.rvutils[self.rvlist.index(self.rv)],self.deadline)      #boulware
+                # self.utilitylist = self.optimalbidder(self.rvutils[self.rvlist.index(self.rv)],self.deadline)        #optimalbidder
+
+        return self.rv
 
     def initialiselistboulware(self,cur_rv):
         if self.strategy == "optimal":
@@ -143,7 +161,7 @@ class Party:
     def boulwareUtilities (self,rv,Deadline):
         # print("checkhere",rv)
         ut = []
-        beta = 0.2
+        beta = .2
         beta = float(1)/beta
         for i in range(1,Deadline+1):
             minm = min(i,Deadline)
@@ -277,6 +295,9 @@ class Party:
         cur_rv = self.rv
         cur_pos =self.rvlist.index(self.rv)
         self.countlist[cur_pos]+=1
+        temp = copy.deepcopy(self.countlist)
+        # print('Counter List',temp)
+        # print('Current RV',self.rv)
     def updateprobscounter(self):
         for i in range(0,len(self.rvlist)):
             self.roundproblist[i] = self.countlist[i]/np.sum(self.countlist)
@@ -326,8 +347,8 @@ class Party:
 
     def lstminitialize(self,updaterate,rounds,test_count):
         # print("Lstm here")
-        # self.lstmrv = np.load('LSTM/Data_100_4hyp/Preds/pred_fire'+str(updaterate)+'.npy')   ### 4 Hypo fire
-        self.lstmrv = np.load('LSTM/Data_100_2hyp/Preds/pred_fire'+str(updaterate)+'.npy')   ### 2 Hypo fire
+        self.lstmrv = np.load('LSTM/Data_100_4hyp/Preds/pred_fire'+str(updaterate)+'.npy')   ### 4 Hypo fire
+        # self.lstmrv = np.load('LSTM/Data_100_2hyp/Preds/pred_fire'+str(updaterate)+'.npy')   ### 2 Hypo fire
         self.lstmrv = self.lstmrv.reshape(300,99)
         # print("here",self.lstmrv.shape)
         if(rounds>=1):

@@ -18,6 +18,7 @@ def Negotiation(deadline,parties,updaterate,test_count):
     mycounterparty.strategy = "counter"
     mybayesian = parties[0]
     mybayesian.strategy = "bayesian" ###my agent bayesian
+    check = [[] for i in range(4)]
     for rounds in range(deadline):
         # print('Round ',rounds)
         #time.sleep(1)
@@ -36,39 +37,42 @@ def Negotiation(deadline,parties,updaterate,test_count):
         myparty.lstminitialize(updaterate,rounds,test_count)
         mycounterparty.counterinitialize(rounds)
         #print("idhr",myparty.predictedrvs)
-        if rounds > 1:
-            for i in range(len(parties)):
-                bidding_party = parties[i]
-                # print("Current Bid by Party #",bidding_party.name)
-                random.seed(datetime.datetime.now())
-                current_bid,bid_issue = bidding_party.offerbid(rounds,bidding_party.strategy)
-                # print("The current bid utility being offered is: ",current_bid," and the current issue is ",bid_issue,bidding_party.strategy)
-                votesevaluater = False
-                tempcheck = False
-                templist = [0 for i in range(len(parties))]
+        for i in range(len(parties)):
+            bidding_party = parties[i]
+            # print("Current Bid by Party #",bidding_party.name)
+            random.seed(datetime.datetime.now())
+            current_bid,bid_issue = bidding_party.offerbid(rounds,bidding_party.strategy)
+            # print("The current bid utility being offered is: ",current_bid," and the current issue is ",bid_issue,bidding_party.strategy)
+            votesevaluater = False
+            tempcheck = False
+            templist = [0 for i in range(len(parties))]
+            # check[i].append(current_bid)
+            for j in range(len(parties)):
+                party = parties[j]
+                if party!=bidding_party:
+                    partyresponse,partyvalue = party.evaluate_bid_and_vote(current_bid,bid_issue,rounds,party.strategy)
+                    if(partyresponse=="No"):
+                        votesevaluater = False
+                        # templist = [0]*len(parties)
+                        templist = [0 for i in range(len(parties))]
+                        break
+                    else:
+                        votesevaluater = True
+                        tempcheck = True
+                        templist[j] = partyvalue
+            if(votesevaluater==True):
                 for j in range(len(parties)):
-                    party = parties[j]
-                    if party!=bidding_party:
-                        partyresponse,partyvalue = party.evaluate_bid_and_vote(current_bid,bid_issue,rounds,party.strategy)
-                        if(partyresponse=="No"):
-                            votesevaluater = False
-                            # templist = [0]*len(parties)
-                            templist = [0 for i in range(len(parties))]
-                            break
-                        else:
-                            votesevaluater = True
-                            tempcheck = True
-                            templist[j] = partyvalue
-                if(votesevaluater==True):
-                    for j in range(len(parties)):
-                        if(j!=i):
-                            testlist[j].append(templist[j])
-                    testlist[i].append(current_bid)
-                    print("Negotiation Successfull Offered by Party #",bidding_party.name," in round number",rounds)
-                    # print(len(parties[0].bayesianutilitylist),len(parties[1].counterutilitylist))
-                    return current_bid,bidding_party.name
-                else:
-                    continue
+                    if(j!=i):
+                        testlist[j].append(templist[j])
+                testlist[i].append(current_bid)
+                print("Negotiation Successfull Offered by Party #",bidding_party.name," in round number",rounds)
+                # print(len(parties[0].bayesianutilitylist),len(parties[1].counterutilitylist))
+                return current_bid,bidding_party.name
+            else:
+                continue
+    #     check_data = np.array(check)
+    # np.save('checkdata',check_data)
+    # print(check_data.shape)
     # print("Sorry Deadline is over and negotiation could not be completed")
     #print(parties[1].bayesianutilitylist,parties[2].counterutilitylist)
     return  0.0,None

@@ -323,7 +323,6 @@ class Party:
 
     def lstminitialize(self,updaterate,rounds,test_count):
         # print("Lstm here")
-        # self.lstmrv = np.load('LSTM/Data_100_4hyp/Preds/pred_fire'+str(updaterate)+'.npy')
         self.lstmrv = np.load('LSTM/Meeting_Data_100_9hyp/Preds/pred_meet'+str(updaterate)+'.npy')
         self.lstmrv = self.lstmrv.reshape(300,99)
         # print("here",self.lstmrv.shape)

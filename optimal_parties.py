@@ -157,15 +157,14 @@ class Party:
 
     def optimalbidder(self,rv,Deadline):
         ut = []
-        ut.append(.25+.25*rv)
-        for i in range(1,Deadline):
-            ut.append(.25*math.pow(ut[i-1]+1,2))
-        ut.reverse()
-        # ut = [0]*Deadline
-        # ut[0] = rv
-        # for i in range(1,100,1):
-        #     ut[i] = .25*((ut[i-1]+1)**2)        
+        # ut.append(.25+.25*rv)
+        # for i in range(1,Deadline):
+        #     ut.append(.25*math.pow(ut[i-1]+1,2))
         # ut.reverse()
+        ut.append(rv)
+        for i in range(1,Deadline):
+            ut[i] = (((ut[i-1]+1)/2)**2)        
+        ut.reverse()
         # print(ut)
         return ut
     

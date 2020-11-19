@@ -62,11 +62,36 @@ def summary_table():
     # print("The summary for boulware base is",avgs)
     print("The summary for optimal base is",avgs)
 
+def predplots():
+    agents = ['BLRA','COUNTER','LSTM']
+    colors = ['r','g','b']
+    styles = ['solid','dotted','dashed']
+    markers = ['o','^','s']
+    font = {'weight' : 'bold','size'   : 13 }
+    points = [(2,2),(2,5),(2,10),(2,20),(2,50),(4,2),(4,5),(4,10),(4,20),(4,50)]
+    avgs = [[0.16765498, 0.19050088, 0.19295727],[0.15674722, 0.17759151, 0.18926029],[0.14929814, 0.15338959, 0.19787798],[0.12962711, 0.13917208, 0.19746076],[0.10904703, 0.12053593, 0.1061228 ],[0.17341154, 0.18929071, 0.19347113], [0.17315517, 0.18220992, 0.1902073 ],[0.14276764, 0.15835184, 0.17231169],[0.13268595, 0.14038879, 0.19169707],[0.1172383 , 0.10894593, 0.12060645]]
+    sums = []
+    x = [i for i in range(1,11)]
+    for j in range(3):
+        y = []
+        for k in avgs:
+            y.append(k[j])
+        plt.plot(x,y,c=colors[j],label=agents[j],linestyle = styles[j],linewidth=3, markersize=6,marker=markers[j])
+        print(agents[j],np.mean(y))
+    legend_properties = {'weight':'bold', 'size':10}
+    plt.legend(prop=legend_properties,bbox_to_anchor=(0.3,.3), loc=1)
+    plt.xticks(x,points)
+    plt.yticks(fontsize=10,fontweight='bold')
+    plt.xticks(fontsize=10,fontweight='bold')
+    plt.xlabel("Hypothesis,UpdateRate",**font)
+    plt.ylabel("Average Prediction Values",**font)
+    # plt.show()
+    plt.savefig('prediction_plot_fire_avg_70_30.pdf',format='pdf', dpi=500)
 def plotfunctionality():
     updates = [2,5,10,20,50]
-    # agents = ['bayesian','counter','lstm','boulware']
-    # agents = ['bayesian','counter','lstm','optimal']
-    agents = ['bayesian','counter','lstm']
+    # agents = ['BLRA','COUNTER','LSTM','BOULWARE']
+    agents = ['BLRA','COUNTER','LSTM','OPTIMAL']
+    # agents = ['BLRA','COUNTER','LSTM']
     colors = ['r','g','b','purple']
     styles = ['solid','dotted','dashdot','dashed']
     markers = ['o','^','s','d']
@@ -94,17 +119,18 @@ def plotfunctionality():
         x = [i for i in range(1,11)]
         y = []
         for update in updates:
-            data = np.load('./Results/fouragents/Boulware/Fire2_Results_Utils_'+str(update)+'.npy')
-            # data = np.load('./Results/fouragents/Optimal/Fire2_Results_Utils_'+str(update)+'.npy')
-            y.append(np.mean(((data[:,j]-data[:,3])/data[:,3])*100))
+            data = np.load('./Results/fiveagents/Boulware/Fire2_Results_Utils_'+str(update)+'.npy')
+            print('hre',data.shape)
+            # data = np.load('./Results/fiveagents/Optimal/Fire2_Results_Utils_'+str(update)+'.npy')
+            y.append(np.mean(((data[:,j]-data[:,4])/data[:,4])*100))
         for update in updates:
-            data = np.load('./Results/fouragents/Boulware/Fire4_Results_Utils_'+str(update)+'.npy')
-            # data = np.load('./Results/fouragents/Optimal/Fire4_Results_Utils_'+str(update)+'.npy')
-            y.append(np.mean(((data[:,j]-data[:,3])/data[:,3])*100))
+            data = np.load('./Results/fiveagents/Boulware/Fire4_Results_Utils_'+str(update)+'.npy')
+            # data = np.load('./Results/fiveagents/Optimal/Fire4_Results_Utils_'+str(update)+'.npy')
+            y.append(np.mean(((data[:,j]-data[:,4])/data[:,4])*100))
         # plt.scatter(x,y,c=colors[j],marker=markers[j],linewidth=6, markersize=12)
-        plt.plot(x,y,c=colors[j],label=agents[j],linestyle = styles[j],linewidth=6, markersize=12,marker=markers[j])
+        plt.plot(x,y,c=colors[j],label=agents[j],linestyle = styles[j],linewidth=3, markersize=6,marker=markers[j])
     legend_properties = {'weight':'bold', 'size':10}
-    plt.legend(prop=legend_properties,bbox_to_anchor=(1,.6), loc=1)
+    plt.legend(prop=legend_properties,bbox_to_anchor=(1,.85), loc=1)
     plt.xticks(x,points)
     plt.yticks(fontsize=10,fontweight='bold')
     plt.xticks(fontsize=10,fontweight='bold')
@@ -112,10 +138,11 @@ def plotfunctionality():
     # plt.title("% Utility Comparison Plot for Fire Domain-Boulware Base")
     plt.xlabel("Hypothesis,UpdateRate",**font)
     plt.ylabel("Average Percentage Utility",**font)
-    # plt.savefig('./Results/fouragents/Optimal/Comparison_plot.pdf',format='pdf', dpi=500)
-    plt.savefig('./Results/fouragents/Boulware/Comparison_plot.pdf',format='pdf', dpi=500)
+    # plt.savefig('./Results/fiveagents/Optimal/Comparison_plot.pdf',format='pdf', dpi=500)
+    plt.savefig('./Results/fiveagents/Boulware/Comparison_plot.pdf',format='pdf', dpi=500)
 
-plotfunctionality()
+# plotfunctionality()
 # calculateavg()
 # percentageaverage()
 # summary_table()
+predplots()

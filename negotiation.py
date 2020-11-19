@@ -34,6 +34,8 @@ def Negotiation(deadline,parties,updaterate,test_count):
             except:
                 party.roundrvlist.append(0.0)
         # print("yoboi",mybayesian.roundrvlist)
+        if(rounds>=100):
+            continue
         mybayesian.mypedictedrvs(rounds)                      ##Bayesian commented
         myparty.lstminitialize(updaterate,rounds,test_count)
         mycounterparty.counterinitialize(rounds)
@@ -56,7 +58,7 @@ def Negotiation(deadline,parties,updaterate,test_count):
                         templist = [0]*len(parties)
                         break
                     else:
-                        votesevaluater = True
+                        # votesevaluater = True
                         tempcheck = True
                         templist[j] = partyvalue
             if(votesevaluater==True):
@@ -129,11 +131,26 @@ def testbench(parties,prefs):
 def checkplots(parties):
     hyp = copy.deepcopy(parties[0].rvlist)
     ct = 3
-    for p in range(3):
-        party = parties[p]
-        print(party.strategy)
-        print("************************************************************************************************************************")
-        print(party.Probabilitylist)
+    mypreds = []
+    for j in range(3):
+        party = parties[j]
+        preds = []
+        for i in range(70,100):
+            pred_val = np.sum(np.dot(np.array(party.Probabilitylist[i]),np.array(party.rvutils)))
+            preds.append(np.abs(pred_val-party.roundrvlist[i]))
+        mypreds.append(np.mean(preds))
+    return mypreds
+    # for p in range(3):
+    #     party = parties[p]
+    #     # print(party.strategy)
+    #     preds = []
+    #     for i in range(len(party.Probabilitylist)):
+    #         pred_val = np.sum(np.dot(np.array(party.Probabilitylist[i]),np.array(party.rvutils)))
+    #         preds.append(np.abs(pred_val-party.roundrvlist[i]))
+    #     partypreds.append(np.mean(preds))
+    # return partypreds
+        # print("SUM Predictions",np.sum(preds))
+        # print("AVG Predictions",np.mean(preds))
         # for j in range(len(hyp)):
         #     temp = []
         #     for k in range(len(party.Probabilitylist)):
@@ -155,6 +172,8 @@ def checkplots(parties):
 
 def averagetests(prefs):
     global testlist
+    global mylistpreds 
+    mylistpreds = []
     deadline = 100
     tests = 100
     updaterates = [2,5,10,20,50]
@@ -165,10 +184,12 @@ def averagetests(prefs):
     perms = [prefs]
     perm_names = [pref_names]
     updatewiselist = []
+    update_preds = []
     for update in updaterates:
         print("Update Rate:",update)
         mylist = []
         ct = [0]*len(pref_names)
+        testpreds = []
         for i in range(tests):
             # parties = initialiseparties()
             # print("TEST NUMBER:",i)
@@ -188,16 +209,20 @@ def averagetests(prefs):
                 # print()
                 Negotiation(deadline,parties,update,i)
             # print(testlist)
-                # checkplots(parties)
+            partypreds = checkplots(parties)
+            testpreds.append(partypreds)
             # print("Average result over preferences: ",[round(np.mean(testlist[j]),3) for j in range(len(testlist))]) 
             mylist.append(copy.deepcopy([round(np.mean(testlist[j]),3) for j in range(len(testlist))]))
             temp =  copy.deepcopy([round(np.mean(testlist[j]),3) for j in range(len(testlist))])
             ct[temp.index(max(temp))]+=1
+        update_preds.append(np.mean(np.array(testpreds),axis=0))
         ct = np.array(ct)
         print("Wins %",ct/tests*100)
         mylist = np.array(mylist)
         print(mylist.shape)
-        np.save('./MeetingResults/fiveagents/Boulware/Meeting_Results_Utils_'+str(update),mylist)
+    print("Prediction Results")
+    print(update_preds)
+        # np.save('./MeetingResults/fiveagents/Boulware/Meeting_Results_Utils_'+str(update),mylist)
         # np.save('./MeetingResults/fiveagents/Optimal/Meeting_Results_Utils_'+str(update),mylist)
     # np.save('update_results',updatewiselist)
 
@@ -205,15 +230,15 @@ def initialiseparties():
     random.seed(datetime.datetime.now())
     parties = []
     deadline = 100
-    number_of_parties =  5
+    number_of_parties =  4
     for partynames in range(1,number_of_parties+1):
         tempparty = Party(str(partynames),deadline)
         parties.append(tempparty)
     parties[0].strategy = 'bayesian'
     parties[1].strategy = 'counter'
     parties[2].strategy = 'lstm'
-    parties[4].strategy = 'boulware'
-    parties[3].strategy = 'optimal'
+    parties[3].strategy = 'boulware'
+    # parties[3].strategy = 'optimal'
     return parties
 
 def main():
